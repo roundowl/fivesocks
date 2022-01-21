@@ -25,8 +25,8 @@
 
 ## Roadmap
 - Authentication NONE - done
-- Authentication GSSAPI
-- Authentication Username/Password
+- Authentication GSSAPI (https://datatracker.ietf.org/doc/html/rfc1961)
+- Authentication Username/Password (https://datatracker.ietf.org/doc/html/rfc1929)
   - Support connections using this - done
   - Actually do authentication
 - Request command:

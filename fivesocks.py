@@ -7,11 +7,35 @@ import time
 
 PORT = 9090
 
-def threadConnectClient(client, addr):
+def destroy_sockets(server: socket.socket, client: socket.socket):
+    server.close()
+    client.close()
+
+def threadConnectClient(client: socket.socket, addr):
     try:
+        server = socket.socket()
         data = client.recv(16384)
+        if data[0] != 5:
+            response = b'\x05\xFF'
+            client.sendall(response)
+            destroy_sockets(server, client)
+            return 0
         for i in range(0, int(data[1])):
-            if data[2+i] == 2:
+            if data[2+i] == 0:
+                response = b'\x05\x00'
+                client.sendall(response)
+                # bind_addr = bytes([192, 168, 0, 145]) + bytes([90, 90])
+                break
+            elif data[2+i] == 1:
+                response = b'\x05\x01'
+                client.sendall(response)
+                data = client.recv(16384)
+                print(f'{data}')
+                response = b'{data[0]}\xFF'
+                client.sendall(response)
+                destroy_sockets(server, client)
+                return 0
+            elif data[2+i] == 2:
                 response = b'\x05\x02'
                 client.sendall(response)
                 data = client.recv(16384)
@@ -19,20 +43,13 @@ def threadConnectClient(client, addr):
                 client.sendall(response)
                 # bind_addr = bytes([192, 168, 0, 145]) + bytes([90, 90])
                 break
-            elif data[2+i] == 0:
-                response = b'\x05\x00'
-                client.sendall(response)
-                # bind_addr = bytes([192, 168, 0, 145]) + bytes([90, 90])
-                break
             elif i == int(data[1]):
                 response = b'\x05\xFF'
                 client.sendall(response)
-                client.close()
+                destroy_sockets(server, client)
                 return 0
         data = client.recv(16384)
 
-        server = socket.socket()
-        print(f'{data}')
         if data[3] == 1:
             dst_addr = socket.inet_ntoa(data[4:8])
             dst_port = int.from_bytes(data[8:10], byteorder="big")
@@ -49,7 +66,7 @@ def threadConnectClient(client, addr):
             print(f"{data[3]}")
         print(f'CONN: Connecting to {dst_addr}:{dst_port}')
         server.connect((dst_addr, dst_port))
-        print("CONN: Connected")
+        print(f"CONN: Connected to {dst_addr}:{dst_port}")
         response = b'\x05\x00\x00\x01\x00\x00\x00\x00' + bytes([int(PORT / 100), PORT % 100])
         client.sendall(response)
 
@@ -63,8 +80,7 @@ def threadConnectClient(client, addr):
             ).start()
     except Exception as e:
         print(repr(e))
-        client.close()
-        server.close()
+        destroy_sockets(server, client)
 
 
 def threadFromClientToServer(client, server):
