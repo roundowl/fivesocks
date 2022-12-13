@@ -1,7 +1,9 @@
 image: ubuntu:latest
 
 before_install:
-        - apt update && apt install -y python3-pytest
+        - apt update
+        - apt install -y python3-pip
+        - pip3 install pytest
 
 install:
         - echo 'install'
@@ -10,7 +12,7 @@ before_script:
         - echo 'before script'
 
 script:
-        - pytest-3
+        - pytest
 
 after_success:
         - echo 'success'
