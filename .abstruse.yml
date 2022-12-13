@@ -10,7 +10,7 @@ before_script:
         - echo 'before script'
 
 script:
-        - pytest
+        - pytest-3
 
 after_success:
         - echo 'success'
